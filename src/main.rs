@@ -8,6 +8,9 @@ pub mod version;
 use crate::version::SG_VERSION_MAJOR;
 use crate::version::SG_VERSION_MINOR;
 
+pub mod system;
+use crate::system::edge_count;
+
 use std::io;
 
 fn cmd_add_segment() -> i32 {
@@ -51,7 +54,28 @@ fn cmd_save_network() -> i32 {
     return 0;
 }
 fn cmd_load_network() -> i32 {
-    println!("Here is where we load a saved track network.");
+    if edge_count() != 0 {
+        println!("WARNING: This will delete the existing network");
+        println!("         Press RETURN key at the prompt to quit");
+    }
+/*  std::string path;
+    std::cout << "Enter file path: ";
+    std::getline(std::cin, path);
+    if (path.empty()) {
+        std::cout << "No response, quitting..." << std::endl;
+        return 0;
+    }
+    std::ifstream ifstr(path);
+    if (!ifstr.good()) {
+        std::cout << path << " not found, quitting..." << std::endl;
+        return ENOENT;
+    }
+
+    int rc = sys().deserialize(ifstr);
+    ifstr.close();
+    return rc;
+
+    println!("Here is where we load a saved track network."); */
     return 0;
 }
 fn cmd_signal_all_junctions() -> i32 {
