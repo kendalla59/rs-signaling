@@ -8,6 +8,8 @@ pub mod version;
 use version::SG_VERSION_MAJOR;
 use version::SG_VERSION_MINOR;
 
+mod common;
+
 pub mod system;
 use system::System;
 use system::edge_count;
@@ -16,18 +18,15 @@ use std::io;
 use std::io::Write;
 
 fn cmd_add_segment(sys: &mut System) -> i32 {
-    let edge;
-    match sys.create_edge("") {
-        Some(e) => {
-            edge = e;
-        }
-        None => {
-            println!("cmd_add_segment: FAILED");
-            return 1;
-        }
+    if let Some(edge) = sys.create_edge("") {
+
+        println!("Added new track segment \"{}\"", edge.name);
+        return 0;
     }
-    println!("Added new track segment \"{}\"", edge.name);
-    return 0;
+    else {
+        println!("ERROR: cmd_add_segment failed");
+        return 1;
+    }
 }
 fn cmd_connect_segments() -> i32 {
     println!("Here is where we connect track segments.");

@@ -7,6 +7,8 @@
 // tracks.
 //
 
+use super::common;
+
 pub mod edge;
 use edge::Edge;
 
@@ -43,6 +45,9 @@ impl System {
         self.edge_map.insert(edge_name.clone(), edge);
 
         // Place terminator nodes at each end of the edge.
+        if let mut nodeA = createNode("") {
+            nodeA.make_terminator()
+        }
         self.edge_map.get(&edge_name)
     }
 
