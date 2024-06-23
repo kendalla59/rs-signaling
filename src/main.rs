@@ -5,16 +5,18 @@
 //     Entry point for the railroad signaling case study implementation.
 //
 pub mod version;
-use crate::version::SG_VERSION_MAJOR;
-use crate::version::SG_VERSION_MINOR;
+use version::SG_VERSION_MAJOR;
+use version::SG_VERSION_MINOR;
 
 pub mod system;
-use crate::system::edge_count;
+use system::edge_count;
 
 use std::io;
+use std::io::Write;
 
 fn cmd_add_segment() -> i32 {
-    println!("Here is where we add a new track segment.");
+    let edge = system::Edge::new();
+    println!("Added new track segment \"{}\"", edge.name);
     return 0;
 }
 fn cmd_connect_segments() -> i32 {
@@ -98,16 +100,19 @@ fn run_command_build() -> i32 {
 
     let mut resp = String::new();
     while resp.is_empty() {
-        io::stdin()
-            .read_line(&mut resp)
-            .expect("Failed to read line");
-        resp = resp.trim_end().to_string();
+        print!("=> ");
+        io::stdout().flush().unwrap();
+        match io::stdin().read_line(&mut resp) {
+            Ok(_)   => resp = resp.trim_end().to_string(),
+            Err(_)  => resp.clear(),
+        }
     }
     if resp == "R" || resp == "r" || resp == "q" || resp == "return" {
         return 1;
     }
 
-    let cmd = resp.trim().parse().expect("TODO: parse better");
+    let cmd;
+    match resp.trim().parse() { Ok(n) => cmd = n, Err(_) => cmd = 0 }
 
     let rc;
 
@@ -176,10 +181,12 @@ fn run_command() -> i32 {
     let mut resp = String::new();
 
     while resp.is_empty() {
-        io::stdin()
-            .read_line(&mut resp)
-            .expect("Failed to read line");
-        resp = resp.trim_end().to_string();
+        print!("=> ");
+        io::stdout().flush().unwrap();
+        match io::stdin().read_line(&mut resp) {
+            Ok(_)   => resp = resp.trim_end().to_string(),
+            Err(_)  => resp.clear(),
+        }
     }
     if resp == "Q" || resp == "q" || resp == "quit" || resp == "exit" {
         return 1;
@@ -187,7 +194,7 @@ fn run_command() -> i32 {
     let cmd;
     if resp == "S" || resp == "s"       { cmd = 5; }    // Special case for "step".
     else if resp == "R" || resp == "r"  { cmd = 6; }    // Special case for "run".
-    else { cmd = resp.trim().parse().expect("Please enter a number."); }
+    else { match resp.trim().parse() { Ok(n) => cmd = n, Err(_) => cmd = 0 } }
 
     let rc;
 
@@ -240,8 +247,8 @@ fn run_command() -> i32 {
 fn main() {
     println!("Case Study Implementation -- Railroad Signaling System");
     println!("Version {SG_VERSION_MAJOR}.{SG_VERSION_MINOR}");
-    while run_command() == 0 {
-    }
+
+    while run_command() == 0 {}
 }
 
 //    sys().resetTrackNetwork();
