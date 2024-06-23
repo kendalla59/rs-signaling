@@ -9,13 +9,23 @@ use version::SG_VERSION_MAJOR;
 use version::SG_VERSION_MINOR;
 
 pub mod system;
+use system::System;
 use system::edge_count;
 
 use std::io;
 use std::io::Write;
 
-fn cmd_add_segment() -> i32 {
-    let edge = system::Edge::new();
+fn cmd_add_segment(sys: &mut System) -> i32 {
+    let edge;
+    match sys.create_edge("") {
+        Some(e) => {
+            edge = e;
+        }
+        None => {
+            println!("cmd_add_segment: FAILED");
+            return 1;
+        }
+    }
     println!("Added new track segment \"{}\"", edge.name);
     return 0;
 }
@@ -85,7 +95,7 @@ fn cmd_signal_all_junctions() -> i32 {
     return 0;
 }
 
-fn run_command_build() -> i32 {
+fn run_command_build(sys: &mut System) -> i32 {
     println!();
     println!("Build Track Network submenu");
     println!("1. Add a track segment");
@@ -119,7 +129,7 @@ fn run_command_build() -> i32 {
     match cmd {
         1 => {
             println!("---------------- Add Track Segment -----------------");
-            rc = cmd_add_segment();
+            rc = cmd_add_segment(sys);
             println!("----------------------------------------------------");
         }
         2 => {
@@ -167,7 +177,7 @@ fn run_command_build() -> i32 {
     return 0;
 }
 
-fn run_command() -> i32 {
+fn run_command(sys: &mut System) -> i32 {
     println!();
     println!("Train Signaling System Simulator");
     println!("1. Build track network (submenu)");
@@ -201,7 +211,7 @@ fn run_command() -> i32 {
     match cmd {
         1 => {
             println!("--------------- Build Track Network ----------------");
-            while run_command_build() == 0 {}
+            while run_command_build(sys) == 0 {}
             rc = 0;
             println!("----------------------------------------------------");
         }
@@ -248,7 +258,9 @@ fn main() {
     println!("Case Study Implementation -- Railroad Signaling System");
     println!("Version {SG_VERSION_MAJOR}.{SG_VERSION_MINOR}");
 
-    while run_command() == 0 {}
+    let mut sys = system::create_system();
+
+    while run_command(&mut sys) == 0 {}
 }
 
 //    sys().resetTrackNetwork();
