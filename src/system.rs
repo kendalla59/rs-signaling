@@ -29,6 +29,9 @@ pub struct System
 }
 
 impl System {
+    // ==============================================================
+    // create_edge
+    // ==============================================================
     pub fn create_edge(&mut self, name: &str) -> Option<&mut Edge> {
         let edge_name;
         if name.is_empty() {
@@ -64,6 +67,9 @@ impl System {
         self.edge_map.get_mut(&edge_name)
     }
 
+    // ==============================================================
+    // create_node
+    // ==============================================================
     pub fn create_node(&mut self, name: &str) -> Option<&mut Node> {
         let node_name;
         if name.is_empty() {
@@ -89,6 +95,9 @@ impl System {
         self.node_map.get_mut(&node_name)
     }
 
+    // ==============================================================
+    // create_train
+    // ==============================================================
     pub fn create_train(&mut self, name: &str) -> Option<&Train> {
         // Verify the name is not already used.
         match self.train_map.get(name) {
@@ -106,6 +115,21 @@ impl System {
         self.train_map.insert(train_name.clone(), train);
         self.train_map.get(&train_name)
     }
+
+    // ==============================================================
+
+    pub fn get_edge(&mut self, name: &String) -> Option<&mut Edge> {
+        self.edge_map.get_mut(name)
+    }
+
+    pub fn has_edge(&self, name: &String) -> bool {
+        match self.edge_map.get(name) {
+            None => return false,
+            Some(_) => return true,
+        }
+    }
+
+    // ==============================================================
 
     fn get_unique_edge_name(&self) -> String {
         let mut ix = 1;
@@ -137,18 +161,7 @@ impl System {
         name
     }
 }
-/*
 
-NodePtr nptrA = createNode();
-nptrA->makeTerminator(EdgeEnd(rval, eEndA));
-rval->assignNodeSlot(NodeSlot(nptrA, eSlot1), eEndA);
-
-NodePtr nptrB = createNode();
-nptrB->makeTerminator(EdgeEnd(rval, eEndB));
-rval->assignNodeSlot(NodeSlot(nptrB, eSlot1), eEndB);
-
-return rval;
-*/
 pub fn create_system() -> System {
     System {
         edge_map:   HashMap::new(),
@@ -156,8 +169,6 @@ pub fn create_system() -> System {
         train_map:  HashMap::new(),
     }
 }
-
-pub const EMPTY_STR: String = String::new();
 
 pub fn edge_count() -> i32 {
     return 0;

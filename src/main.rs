@@ -17,6 +17,51 @@ use system::edge_count;
 use std::io;
 use std::io::Write;
 
+fn enter_name() -> String
+{
+    let mut resp = String::new();
+    print!("Enter track segment name: ");
+    io::stdout().flush().unwrap();
+    match io::stdin().read_line(&mut resp) {
+        Ok(_)   => resp = resp.trim_end().to_string(),
+        Err(_)  => resp.clear(),
+    }
+    if resp.is_empty() {
+        println!("No name entered, quitting...");
+    }
+    resp
+}
+
+fn name_from_number(num: &String) -> String
+{
+    let unum : u32;
+    match num.trim().parse() {
+        Ok(n) => unum = n,
+        Err(_) => return String::new(),
+    }
+    format!("tseg{:03}", unum)
+}
+
+fn enter_a_or_b() -> common::End
+{
+    let mut rval = common::NUM_ENDS;
+    let mut resp = String::new();
+    while rval == common::NUM_ENDS {
+        print!("Enter track end (A or B): ");
+        io::stdout().flush().unwrap();
+        match io::stdin().read_line(&mut resp) {
+            Ok(_)   => resp = resp.trim_end().to_string(),
+            Err(_)  => resp.clear(),
+        }
+        if      (resp == "a") || (resp == "A") { rval = common::END_A; }
+        else if (resp == "b") || (resp == "B") { rval = common::END_B; }
+        else if ! resp.is_empty() {
+            println!("Expected one of [ABab], got {resp}");
+        }
+    }
+    rval
+}
+
 fn cmd_add_segment(sys: &mut System) -> i32 {
     if let Some(edge) = sys.create_edge("") {
 
@@ -24,14 +69,54 @@ fn cmd_add_segment(sys: &mut System) -> i32 {
         return 0;
     }
     else {
-        println!("ERROR: cmd_add_segment failed");
+        println!("ERROR: Failed to add a new track segment");
         return 1;
     }
 }
-fn cmd_connect_segments() -> i32 {
-    println!("Here is where we connect track segments.");
+fn cmd_connect_segments(sys: &mut System) -> i32 {
+    let resp1 = enter_name();
+    if resp1.is_empty() { return 0; }
+    let edge1_name;
+    if sys.has_edge(&resp1) {
+        edge1_name = resp1;
+    }
+    else {
+        let rnum = name_from_number(&resp1);
+        if sys.has_edge(&rnum) {
+            edge1_name = rnum;
+        }
+        else {
+            println!("No such segment \"{resp1}\"");
+            return 1; // EINVAL
+        }
+    }
+    let end1 = enter_a_or_b();
+
+    let resp2 = enter_name();
+    if resp2.is_empty() { return 0; }
+    let edge2_name;
+    if sys.has_edge(&resp2) {
+        edge2_name = resp2;
+    }
+    else {
+        let rnum = name_from_number(&resp2);
+        if sys.has_edge(&rnum) {
+            edge2_name = rnum;
+        }
+        else {
+            println!("No such segment \"{resp2}\"");
+            return 1; // EINVAL
+        }
+    }
+    let end2 = enter_a_or_b();
+
+    let _seg1 = common::EdgeEnd { ee_edge: edge1_name.clone(), ee_end: end1 };
+    let _seg2 = common::EdgeEnd { ee_edge: edge2_name.clone(), ee_end: end2 };
+    //sys.connect_segments(seg1, seg2);
+    //edge1.show();
     return 0;
 }
+
 fn cmd_place_signal() -> i32 {
     println!("Here is where we place a traffic signal.");
     return 0;
@@ -133,7 +218,7 @@ fn run_command_build(sys: &mut System) -> i32 {
         }
         2 => {
             println!("-------------- Connect Track Segment ---------------");
-            rc = cmd_connect_segments();
+            rc = cmd_connect_segments(sys);
             println!("----------------------------------------------------");
         }
         3 => {
