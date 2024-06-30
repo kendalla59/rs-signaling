@@ -57,11 +57,11 @@ impl System {
         // Place terminator nodes at each end of the edge.
         if let Some(node_a) = self.create_node("") {
             node_a.make_terminator(
-                EdgeEnd { ee_edge: edge_name.clone(), ee_end: END_A, });
+                &EdgeEnd { ee_edge: edge_name.clone(), ee_end: END_A, });
         } else { return None; }
         if let Some(node_b) = self.create_node("") {
             node_b.make_terminator(
-                EdgeEnd { ee_edge: edge_name.clone(), ee_end: END_B});
+                &EdgeEnd { ee_edge: edge_name.clone(), ee_end: END_B});
         } else { return None; }
 
         self.edge_map.get_mut(&edge_name)
@@ -121,15 +121,85 @@ impl System {
     pub fn get_edge(&mut self, name: &String) -> Option<&mut Edge> {
         self.edge_map.get_mut(name)
     }
-
     pub fn has_edge(&self, name: &String) -> bool {
+        let rval;
         match self.edge_map.get(name) {
-            None => return false,
-            Some(_) => return true,
+            None    => rval = false,
+            Some(_) => rval = true,
         }
+        rval
     }
 
     // ==============================================================
+
+    pub fn connect_segments(&mut self, s1: &EdgeEnd, s2: &EdgeEnd) -> i32
+    {
+        // If either track is invalid, there is nothing more to do.
+        let edge1;
+        let edge2;
+
+        match self.edge_map.get_mut(&s1.ee_edge) {
+            None => return 1, // EINVAL
+            Some(e) => edge1 = e,
+        }
+        match self.edge_map.get_mut(&s2.ee_edge) {
+            None => return 1, // EINVAL
+            Some(e) => edge2 = e,
+        }
+
+        let cnct_node = edge1.get_node(s1.ee_end);
+        let rmov_node = edge2.get_node(s2.ee_end);
+        let mut repl_node = NodeSlot {
+            ns_node: String::new(),
+            ns_slot: NUM_SLOTS,
+        };
+
+        // Return error if the end of the other track is
+        // not a terminator -- i.e., it must be unconnected.
+        if let Some(node2) = self.node_map.get(&rmov_node.ns_node) {
+            if node2.get_node_type() != NodeType::Terminator {
+                println!("ERROR: Cannot connect if end of other is occupied");
+                return 1; // EBUSY
+            }
+        }
+
+        if let Some(node1) = self.node_map.get_mut(&cnct_node.ns_node) {
+            // Connect to the other track as implied by this track's connection.
+            match node1.get_node_type() {
+                NodeType::Terminator => {
+
+                    // Connect results in a continuation node.
+                    node1.make_continuation(s2);
+    
+                    // Replace the other edge's node slot entry.
+                    repl_node.ns_node = node1.name.clone();
+                    repl_node.ns_slot = SLOT_2;
+                    edge2.assign_node_slot(&repl_node, s2.ee_end);
+                }
+                NodeType::Continuation => {
+                    // This connection results in a junction from
+                    // this track to the currently connected track
+                    // (left) or to the new track (right).
+                    node1.make_junction(s2, cnct_node.ns_slot);
+
+                    // Replace the other edge's node slot entry.
+                    repl_node.ns_node = cnct_node.ns_node;
+                    repl_node.ns_slot = SLOT_3;
+                    edge2.assign_node_slot(&repl_node, s2.ee_end);
+                }
+                NodeType::Junction => {
+                    // We cannot connect any more tracks to this end.
+                    println!("Attempt to connect to a junction");
+                    return 1; // throw
+                }
+                _ => {
+                    println!("Unexpected node type in connectEdge");
+                    return 1; // throw
+                }
+            }
+        }
+        return 0;
+    }
 
     fn get_unique_edge_name(&self) -> String {
         let mut ix = 1;
@@ -140,7 +210,7 @@ impl System {
         }
         name
     }
-
+    
     fn get_unique_node_name(&self) -> String {
         let mut ix = 1;
         let mut name = String::from("node001");
@@ -150,7 +220,7 @@ impl System {
         }
         name
     }
-
+    
     fn get_unique_train_name(&self) -> String {
         let mut ix = 1;
         let mut name = String::from("train1");
