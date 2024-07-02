@@ -138,11 +138,11 @@ impl System {
         let edge1;
         let edge2;
 
-        match self.edge_map.get_mut(&s1.ee_edge) {
+        match self.edge_map.get(&s1.ee_edge) {
             None => return 1, // EINVAL
             Some(e) => edge1 = e,
         }
-        match self.edge_map.get_mut(&s2.ee_edge) {
+        match self.edge_map.get(&s2.ee_edge) {
             None => return 1, // EINVAL
             Some(e) => edge2 = e,
         }
@@ -156,46 +156,93 @@ impl System {
 
         // Return error if the end of the other track is
         // not a terminator -- i.e., it must be unconnected.
-        if let Some(node2) = self.node_map.get(&rmov_node.ns_node) {
-            if node2.get_node_type() != NodeType::Terminator {
-                println!("ERROR: Cannot connect if end of other is occupied");
-                return 1; // EBUSY
+        match self.node_map.get(&rmov_node.ns_node) {
+            None => return 1, // throw
+            Some(n) => {
+                if n.get_node_type() != NodeType::Terminator {
+                    println!("ERROR: Cannot connect if end of other is occupied");
+                    return 1; // EBUSY
+                }
             }
         }
 
-        if let Some(node1) = self.node_map.get_mut(&cnct_node.ns_node) {
-            // Connect to the other track as implied by this track's connection.
-            match node1.get_node_type() {
-                NodeType::Terminator => {
+        let node1;
+        match self.node_map.get_mut(&cnct_node.ns_node) {
+            None => return 1, // throw
+            Some(n) => node1 = n,
+        }
 
-                    // Connect results in a continuation node.
-                    node1.make_continuation(s2);
-    
-                    // Replace the other edge's node slot entry.
-                    repl_node.ns_node = node1.name.clone();
-                    repl_node.ns_slot = SLOT_2;
-                    edge2.assign_node_slot(&repl_node, s2.ee_end);
-                }
-                NodeType::Continuation => {
-                    // This connection results in a junction from
-                    // this track to the currently connected track
-                    // (left) or to the new track (right).
-                    node1.make_junction(s2, cnct_node.ns_slot);
+        // Connect to the other track as implied by this track's connection.
+        match node1.get_node_type() {
+            NodeType::Terminator => {
+                // Connect results in a continuation node.
+                node1.make_continuation(s2);
 
-                    // Replace the other edge's node slot entry.
-                    repl_node.ns_node = cnct_node.ns_node;
-                    repl_node.ns_slot = SLOT_3;
-                    edge2.assign_node_slot(&repl_node, s2.ee_end);
+                // Replace the other edge's node slot entry.
+                repl_node.ns_node = node1.name.clone();
+                repl_node.ns_slot = SLOT_2;
+
+                match self.edge_map.get_mut(&s2.ee_edge) {
+                    None => panic!("Where did edge {} go?", s1.ee_edge),
+                    Some(e) => {
+                        e.assign_node_slot(&repl_node, s2.ee_end);
+                    }
                 }
-                NodeType::Junction => {
-                    // We cannot connect any more tracks to this end.
-                    println!("Attempt to connect to a junction");
-                    return 1; // throw
+            }
+            NodeType::Continuation => {
+                // This connection results in a junction from
+                // this track to the currently connected track
+                // (left) or to the new track (right).
+
+                if cnct_node.ns_slot == SLOT_2 {
+                    // Swap slot 1 and 2 if the common edge is on slot 2.
+                    // NOTE: The NodeSlot for the Edge, and the EdgeEnd
+                    //       for the Node must both be updated, or the
+                    //       network will become corrupted.
+                    let e1 = node1.get_edge_end(SLOT_1);
+                    let e2 = node1.get_edge_end(SLOT_2);
+
+                    match self.edge_map.get_mut(&e1.ee_edge) {
+                        None => panic!("Where did edge {} go?", e1.ee_edge),
+                        Some(e) => {
+                            let mut ns = e.get_node(e1.ee_end);
+                            assert!(ns.ns_slot == SLOT_1);
+                            ns.ns_slot = SLOT_2;
+                            e.assign_node_slot(&ns, e1.ee_end);
+                        }
+                    }
+                    match self.edge_map.get_mut(&e2.ee_edge) {
+                        None => panic!("Where did edge {} go?", e2.ee_edge),
+                        Some(e) => {
+                            let mut ns = e.get_node(e2.ee_end);
+                            assert!(ns.ns_slot == SLOT_2);
+                            ns.ns_slot = SLOT_1;
+                            e.assign_node_slot(&ns, e2.ee_end);
+                        }
+                    }
+                    node1.set_edge_end(&e1, SLOT_2);
+                    node1.set_edge_end(&e2, SLOT_1);
                 }
-                _ => {
-                    println!("Unexpected node type in connectEdge");
-                    return 1; // throw
+                node1.make_junction(s2);
+
+                // Replace the other edge's node slot entry.
+                repl_node.ns_node = cnct_node.ns_node;
+                repl_node.ns_slot = SLOT_3;
+                match self.edge_map.get_mut(&s2.ee_edge) {
+                    None => panic!("Where did edge {} go?", s1.ee_edge),
+                    Some(e) => {
+                        e.assign_node_slot(&repl_node, s2.ee_end);
+                    }
                 }
+            }
+            NodeType::Junction => {
+                // We cannot connect any more tracks to this end.
+                println!("Attempt to connect to a junction");
+                return 1; // throw
+            }
+            _ => {
+                println!("Unexpected node type in connectEdge");
+                return 1; // throw
             }
         }
         return 0;
