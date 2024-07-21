@@ -52,18 +52,34 @@ impl System {
             ends: [ NodeSlot { ns_node: String::new(), ns_slot: SLOT_1, },
                     NodeSlot { ns_node: String::new(), ns_slot: SLOT_1, } ],
         };
-        self.edge_map.insert(edge_name.clone(), edge);
+        match self.edge_map.insert(edge_name.clone(), edge) {
+            None => (),
+            Some(_) => panic!("Insert for {} failed", &edge_name),
+        }
 
         // Place terminator nodes at each end of the edge.
+        let node_a_name;
+        let node_b_name;
         if let Some(node_a) = self.create_node("") {
+            node_a_name = node_a.name.clone();
             node_a.make_terminator(
                 &EdgeEnd { ee_edge: edge_name.clone(), ee_end: END_A, });
-        } else { return None; }
+        } else { panic!("Failed to create node_a"); }
         if let Some(node_b) = self.create_node("") {
+            node_b_name = node_b.name.clone();
             node_b.make_terminator(
                 &EdgeEnd { ee_edge: edge_name.clone(), ee_end: END_B});
-        } else { return None; }
+        } else { panic!("Failed to create node_b"); }
 
+        match self.edge_map.get_mut(&edge_name) {
+            None => (),
+            Some(e) => {
+                e.assign_node_slot(
+                    &NodeSlot { ns_node: node_a_name, ns_slot: SLOT_1 }, END_A);
+                e.assign_node_slot(
+                    &NodeSlot { ns_node: node_b_name, ns_slot: SLOT_1 }, END_B);
+            }
+        }
         self.edge_map.get_mut(&edge_name)
     }
 
