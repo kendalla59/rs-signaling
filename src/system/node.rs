@@ -53,7 +53,7 @@ impl Node {
         }
     }
 
-    pub fn set_edge_end(&mut self, edge: &EdgeEnd, slot: Slot) {
+    pub fn set_edge_end(&mut self, _edge: &EdgeEnd, _slot: Slot) {
         
     }
 }
