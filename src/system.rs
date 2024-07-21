@@ -293,6 +293,191 @@ impl System {
         }
         name
     }
+
+
+    pub fn show_edge(&self, edge_name: &str, show_end: End) {
+        let mut msg = String::new();
+        let show_edge;
+        match self.edge_map.get(edge_name) {
+            None => return,
+            Some(e) => show_edge = e,
+        }
+
+        if (show_end == END_A) || (show_end == NUM_ENDS) {
+            let node = &show_edge.ends[END_A];
+            match self.node_map.get(&node.ns_node) {
+                None => { println!("ERROR: Edge has null end node"); return },
+                Some(n) => {
+                    match n.get_node_type() {
+                        NodeType::Empty => {
+                            // TODO: Report error?
+                        }
+                        NodeType::Terminator => {
+                            msg += "<term-> ||== ";
+                        }
+                        NodeType::Continuation => {
+                            msg += "trackXXX <==> ";
+                        }
+                        NodeType::Junction => {
+                            msg += "trackXXX ??=> ";
+                        }
+                    }
+                }
+            }
+        }
+        if (show_end == END_B) || (show_end == NUM_ENDS) {
+            let node = &show_edge.ends[END_A];
+            match self.node_map.get(&node.ns_node) {
+                None => { println!("ERROR: Edge has null end node"); return },
+                Some(n) => {
+                    match n.get_node_type() {
+                        NodeType::Empty => {
+                            // TODO: Report error?
+                        }
+                        NodeType::Terminator => {
+                            msg += " ==|| <-term>";
+                        }
+                        NodeType::Continuation => {
+                            msg += " <==> trackYYY";
+                        }
+                        NodeType::Junction => {
+                            msg += " <=?? trackYYY";
+                        }
+                    }
+                }
+            }
+        }
+        println!("{msg}");
+        /*
+        eJSwitch sw;
+        std::string msg;
+        if ((showEnd == eEndA) || (showEnd == eNumEnds)) {
+            NodeSlot node = m_ends[eEndA];
+            EdgeEnd edge;
+            EdgePtr eptr;
+            eSlot slot;
+            if (node.nsNode == nullptr) {
+                throw std::runtime_error("Edge has null end node");
+            }
+            switch (node.nsNode->getNodeType()) {
+            case eEmpty: // TODO: exception?
+            case eTerminator:
+                msg += "<term-> ||== ";
+                break;
+            case eContinuation:
+                edge = node.nsNode->getNext(node.nsSlot);
+                eptr = edge.eeEdge.lock();
+                if (eptr) { msg += eptr->name() + " <==> "; }
+                // TODO: else: exception?
+                break;
+    
+            case eJunction:
+                sw = node.nsNode->getSwitchPos();
+                slot = (sw == eSwitchRight) ? eSlot3 : eSlot2;
+                if (node.nsSlot == eSlot1) {
+                    edge = node.nsNode->getEdgeEnd(slot);
+                    eptr = edge.eeEdge.lock();
+                    if (eptr)                   { msg += eptr->name(); }
+                    else                        { msg += "<empty>"; }
+    
+                    if      (sw == eSwitchNone) { msg += " XX"; }
+                    else if (sw == eSwitchLeft) { msg += " //"; }
+                    else                        { msg += " \\\\"; }
+                    msg += "=> ";
+                }
+                else {
+                    edge = node.nsNode->getEdgeEnd(eSlot1);
+                    eptr = edge.eeEdge.lock();
+                    if (eptr)                   { msg += eptr->name(); }
+                    else                        { msg += "<empty>"; }
+    
+                    if (slot == node.nsSlot)    { msg += " <="; }
+                    else                        { msg += " X="; }
+    
+                    if      (sw == eSwitchNone) { msg += "XX "; }
+                    else if (sw == eSwitchLeft) { msg += "// "; }
+                    else                        { msg += "\\\\ "; }
+                }
+                break;
+            }
+            if (m_signals[eEndA]) {
+                msg += (m_signals[eEndA]->signalIsRed() ? "R " : "G ");
+            }
+            else {
+                msg += "_ ";
+            }
+        }
+    
+        msg += m_name;
+    
+        if ((showEnd == eEndB) || (showEnd == eNumEnds)) {
+            if (m_signals[eEndB]) {
+                msg += (m_signals[eEndB]->signalIsRed() ? " R" : " G");
+            }
+            else {
+                msg += " _";
+            }
+            NodeSlot node = m_ends[eEndB];
+            EdgeEnd edge;
+            EdgePtr eptr;
+            eSlot slot;
+            if (node.nsNode == nullptr) {
+                throw std::runtime_error("Edge has null end node");
+            }
+            switch (node.nsNode->getNodeType()) {
+            case eEmpty: // TODO: exception?
+            case eTerminator:
+                msg += " ==|| <-term>";
+                break;
+            case eContinuation:
+                edge = node.nsNode->getNext(node.nsSlot);
+                eptr = edge.eeEdge.lock();
+                if (eptr) { msg += " <==> " + eptr->name(); }
+                // TODO: else: exception?
+                break;
+    
+            case eJunction:
+                sw = node.nsNode->getSwitchPos();
+                slot = (sw == eSwitchRight) ? eSlot3 : eSlot2;
+                if (node.nsSlot == eSlot1) {
+                    msg += " <=";
+                    if      (sw == eSwitchNone)  { msg += "XX "; }
+                    else if (sw == eSwitchLeft)  { msg += "// "; }
+                    else                         { msg += "\\\\ "; }
+    
+                    edge = node.nsNode->getEdgeEnd(slot);
+                    eptr = edge.eeEdge.lock();
+                    if (eptr) { msg += eptr->name(); }
+                    else { msg += "<empty>"; }
+                }
+                else {
+                    if      (sw == eSwitchNone)  { msg += " XX"; }
+                    else if (sw == eSwitchLeft)  { msg += " //"; }
+                    else                         { msg += " \\\\"; }
+    
+                    if (slot == node.nsSlot)    { msg += "=> "; }
+                    else                        { msg += "=X "; }
+    
+                    edge = node.nsNode->getEdgeEnd(eSlot1);
+                    eptr = edge.eeEdge.lock();
+                    if (eptr) { msg += eptr->name(); }
+                    else { msg += "<empty>"; }
+                }
+                break;
+            }
+        }
+        if (m_train) {
+            if (m_train->getPosition().eeEnd == eEndA) {
+                msg += "  /[o==o]-[o==o]  ";
+            }
+            else {
+                msg += "   [o==o]-[o==o]\\ ";
+            }
+            msg += m_train->name();
+        }
+        std::cout << msg << std::endl;
+        */
+    }
 }
 
 pub fn create_system() -> System {

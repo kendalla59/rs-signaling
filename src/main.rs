@@ -8,7 +8,8 @@ pub mod version;
 use version::SG_VERSION_MAJOR;
 use version::SG_VERSION_MINOR;
 
-mod common;
+pub mod common;
+use common::NUM_ENDS;
 
 pub mod system;
 use system::System;
@@ -113,7 +114,8 @@ fn cmd_connect_segments(sys: &mut System) -> i32 {
     let seg1 = common::EdgeEnd { ee_edge: edge1_name.clone(), ee_end: end1 };
     let seg2 = common::EdgeEnd { ee_edge: edge2_name.clone(), ee_end: end2 };
     sys.connect_segments(&seg1, &seg2);
-    //edge1.show();
+
+    sys.show_edge(&edge1_name, NUM_ENDS);
     return 0;
 }
 
