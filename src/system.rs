@@ -316,7 +316,8 @@ impl System {
                             msg += "<term-> ||== ";
                         }
                         NodeType::Continuation => {
-                            msg += "trackXXX <==> ";
+                            let edge = n.get_next(node.ns_slot);
+                            msg += format!("{} <==> ", edge.ee_edge).as_str();
                         }
                         NodeType::Junction => {
                             msg += "trackXXX ??=> ";
@@ -324,9 +325,17 @@ impl System {
                     }
                 }
             }
+            // TODO: Add signals (R/G).
+            msg += "_ ";
         }
+
+        msg += edge_name;
+
         if (show_end == END_B) || (show_end == NUM_ENDS) {
-            let node = &show_edge.ends[END_A];
+            // TODO: Add signals (R/G).
+            msg += " _";
+
+            let node = &show_edge.ends[END_B];
             match self.node_map.get(&node.ns_node) {
                 None => { println!("ERROR: Edge has null end node"); return },
                 Some(n) => {
@@ -338,7 +347,8 @@ impl System {
                             msg += " ==|| <-term>";
                         }
                         NodeType::Continuation => {
-                            msg += " <==> trackYYY";
+                            let edge = n.get_next(node.ns_slot);
+                            msg += format!(" <==> {}", edge.ee_edge).as_str();
                         }
                         NodeType::Junction => {
                             msg += " <=?? trackYYY";
