@@ -126,8 +126,8 @@ fn cmd_toggle_switch() -> i32 {
     println!("Here is where we toggle a track switch.");
     return 0;
 }
-fn cmd_list_segments() -> i32 {
-    println!("Here is where we list the track segments.");
+fn cmd_list_segments(sys: &System) -> i32 {
+    sys.show_edges();
     return 0;
 }
 fn cmd_show_connections() -> i32 {
@@ -234,7 +234,7 @@ fn run_command_build(sys: &mut System) -> i32 {
         }
         5 => {
             println!("--------------- List Track Segments ----------------");
-            rc = cmd_list_segments();
+            rc = cmd_list_segments(sys);
             println!("----------------------------------------------------");
         }
         6 => {
@@ -302,7 +302,7 @@ fn run_command(sys: &mut System) -> i32 {
         }
         2 => {
             println!("--------------- List Track Segments ----------------");
-            rc = cmd_list_segments();
+            rc = cmd_list_segments(sys);
             println!("----------------------------------------------------");
         }
         3 => {
