@@ -9,6 +9,8 @@ use version::SG_VERSION_MAJOR;
 use version::SG_VERSION_MINOR;
 
 pub mod common;
+use common::END_A;
+use common::END_B;
 use common::NUM_ENDS;
 
 pub mod system;
@@ -45,17 +47,17 @@ fn name_from_number(num: &String) -> String
 
 fn enter_a_or_b() -> common::End
 {
-    let mut rval = common::NUM_ENDS;
+    let mut rval = NUM_ENDS;
     let mut resp = String::new();
-    while rval == common::NUM_ENDS {
+    while rval == NUM_ENDS {
         print!("Enter track end (A or B): ");
         io::stdout().flush().unwrap();
         match io::stdin().read_line(&mut resp) {
             Ok(_)   => resp = resp.trim_end().to_string(),
             Err(_)  => resp.clear(),
         }
-        if      (resp == "a") || (resp == "A") { rval = common::END_A; }
-        else if (resp == "b") || (resp == "B") { rval = common::END_B; }
+        if      (resp == "a") || (resp == "A") { rval = END_A; }
+        else if (resp == "b") || (resp == "B") { rval = END_B; }
         else if ! resp.is_empty() {
             println!("Expected one of [ABab], got {resp}");
         }
