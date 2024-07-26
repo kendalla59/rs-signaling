@@ -12,6 +12,7 @@ pub enum NodeType {
 
 // A junction switch can be in one of three possible states.
 //
+#[derive(PartialEq, Copy, Clone)]
 pub enum JSwitch {
     JSwitchNone,    // Unknown or possibly in motion.
     JSwitchLeft,    // Switch from common to left track.

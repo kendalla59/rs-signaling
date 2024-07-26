@@ -9,6 +9,9 @@
 
 use super::common;
 use common::*;
+use common::JSwitch::JSwitchNone;
+use common::JSwitch::JSwitchLeft;
+use common::JSwitch::JSwitchRight;
 
 pub mod edge;
 use edge::Edge;
@@ -253,11 +256,11 @@ impl System {
             }
             NodeType::Junction => {
                 // We cannot connect any more tracks to this end.
-                println!("Attempt to connect to a junction");
+                println!("ERROR: Attempt to connect to a junction");
                 return 1; // throw
             }
             _ => {
-                println!("Unexpected node type in connectEdge");
+                println!("ERROR: Unexpected node type in connectEdge");
                 return 1; // throw
             }
         }
@@ -317,10 +320,35 @@ impl System {
                         }
                         NodeType::Continuation => {
                             let edge = n.get_next(node.ns_slot);
-                            msg += format!("{} <==> ", edge.ee_edge).as_str();
+                            msg += &edge.ee_edge;
+                            msg += " <==> ";
                         }
                         NodeType::Junction => {
-                            msg += "trackXXX ??=> ";
+                            let sw = n.get_switch_pos();
+                            let slot =
+                                if sw == JSwitchRight { SLOT_3 } else { SLOT_2 };
+                            if node.ns_slot == SLOT_1 {
+                                let edge = n.get_edge_end(slot);
+                                if edge.ee_edge.is_empty()  { msg += "<empty>"; }
+                                else                        { msg += &edge.ee_edge; }
+
+                                if      sw == JSwitchNone   { msg += " XX"; }
+                                else if sw == JSwitchLeft   { msg += " //"; }
+                                else                        { msg += " \\\\"; }
+                                msg += "=> ";
+                            }
+                            else {
+                                let edge = n.get_edge_end(SLOT_1);
+                                if edge.ee_edge.is_empty()  { msg += "<empty>"; }
+                                else                        { msg += &edge.ee_edge; }
+
+                                if slot == node.ns_slot     { msg += " <="; }
+                                else                        { msg += " X="; }
+
+                                if      sw == JSwitchNone   { msg += "XX "; }
+                                else if sw == JSwitchLeft   { msg += "// "; }
+                                else                        { msg += "\\\\ "; }
+                            }
                         }
                     }
                 }
@@ -348,10 +376,35 @@ impl System {
                         }
                         NodeType::Continuation => {
                             let edge = n.get_next(node.ns_slot);
-                            msg += format!(" <==> {}", edge.ee_edge).as_str();
+                            msg += " <==> ";
+                            msg += &edge.ee_edge;
                         }
                         NodeType::Junction => {
-                            msg += " <=?? trackYYY";
+                            let sw = n.get_switch_pos();
+                            let slot =
+                                if sw == JSwitchRight { SLOT_3 } else { SLOT_2 };
+                            if node.ns_slot == SLOT_1 {
+                                msg += " <=";
+                                let edge = n.get_edge_end(slot);
+                                if      sw == JSwitchNone   { msg += "XX "; }
+                                else if sw == JSwitchLeft   { msg += "// "; }
+                                else                        { msg += "\\\\ "; }
+
+                                if edge.ee_edge.is_empty()  { msg += "<empty>"; }
+                                else                        { msg += &edge.ee_edge; }
+                            }
+                            else {
+                                if      sw == JSwitchNone   { msg += " XX"; }
+                                else if sw == JSwitchLeft   { msg += " //"; }
+                                else                        { msg += " \\\\"; }
+                
+                                if slot == node.ns_slot     { msg += "=> "; }
+                                else                        { msg += "=X "; }
+
+                                let edge = n.get_edge_end(SLOT_1);
+                                if edge.ee_edge.is_empty()  { msg += "<empty>"; }
+                                else                        { msg += &edge.ee_edge; }
+                            }
                         }
                     }
                 }

@@ -125,4 +125,9 @@ impl Node {
         }
         rval
     }
+
+    pub fn get_switch_pos(&self) -> JSwitch {
+        let rval = self.switch_state;
+        rval
+    }
 }
