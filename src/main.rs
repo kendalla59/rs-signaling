@@ -116,7 +116,11 @@ fn cmd_connect_segments(sys: &mut System) -> i32 {
     let seg1 = common::EdgeEnd { ee_edge: edge1_name.clone(), ee_end: end1 };
     let seg2 = common::EdgeEnd { ee_edge: edge2_name.clone(), ee_end: end2 };
     let rc = sys.connect_segments(&seg1, &seg2);
-    if rc == 0 { sys.show_edge(&edge1_name, NUM_ENDS); }
+    if rc == 0 {
+        if let Some(edge) = sys.get_edge(&edge1_name) {
+            edge.show(sys, NUM_ENDS);
+        }
+    }
     rc
 }
 
