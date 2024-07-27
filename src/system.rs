@@ -126,8 +126,8 @@ impl System {
         self.node_map.get_mut(&node_name)
     }
 
-    pub fn get_node(&self, name: &String) -> Option<&Node> {
-        self.node_map.get(name)
+    pub fn get_node(&mut self, name: &String) -> Option<&mut Node> {
+        self.node_map.get_mut(name)
     }
 
     // ==============================================================
@@ -314,6 +314,16 @@ impl System {
             self.edge_map[name].show(self, NUM_ENDS);
         }
         println!("TOTAL: {} track segments", self.edge_map.len());
+    }
+
+    pub fn show_nodes(&self) {
+        for name in self.node_map.keys().sorted() {
+            self.node_map[name].show(self);
+        }
+    }
+
+    pub fn update_all_signals(&mut self) {
+
     }
 }
 

@@ -1,6 +1,12 @@
 // node.rs
 
-use super::common::*;
+use super::common;
+use common::*;
+use common::JSwitch::JSwitchNone;
+use common::JSwitch::JSwitchLeft;
+use common::JSwitch::JSwitchRight;
+
+use crate::system::System;
 
 pub struct Node
 {
@@ -130,4 +136,43 @@ impl Node {
         let rval = self.switch_state;
         rval
     }
+    pub fn set_switch_pos(&mut self, jsw: JSwitch) {
+        self.switch_state = jsw;
+    }
+    pub fn toggle_switch_pos(&mut self) {
+        self.switch_state =
+            if self.switch_state == JSwitchLeft { JSwitchRight }
+            else                                { JSwitchLeft  };
+    }
+
+    pub fn show(&self, sys: &System) {
+        let mut nstr = String::new();
+        let mut edge = &self.slots[0].ee_edge;
+        nstr += format!("{:>12}:", self.name).as_str();
+
+        for ix in 0..NUM_SLOTS {
+            edge = &self.slots[ix].ee_edge;
+            if !edge.is_empty() {
+                if let Some(eref) = sys.get_edge(edge) {
+                    let next = eref.get_adjacent(self.slots[ix].ee_end).ns_node;
+                    if !next.is_empty() {
+                        if ix > 0 { nstr += ","; }
+                        nstr += format!("{:>10}", next).as_str();
+                    }
+                }
+            }
+            else { break }
+        }
+
+        // This is true if and only if the node is a junction.
+        if !edge.is_empty() {
+            nstr += format!("{:>9}", "(switch").as_str();
+            match &self.switch_state {
+                JSwitchNone  => nstr += ": none)",
+                JSwitchLeft  => nstr += ": left)",
+                JSwitchRight => nstr += ": right)",
+            }
+        }
+        println!("{nstr}");
+        }
 }

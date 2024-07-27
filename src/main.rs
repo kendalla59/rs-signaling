@@ -129,7 +129,7 @@ fn cmd_place_signal() -> i32 {
     println!("Here is where we place a traffic signal.");
     return 0;
 }
-fn cmd_toggle_switch(sys: &System) -> i32 {
+fn cmd_toggle_switch(sys: &mut System) -> i32 {
     let jctv = sys.get_all_junctions();
     if jctv.is_empty() {
         println!(">>> There are no junctions in the track network <<<");
@@ -162,21 +162,21 @@ fn cmd_toggle_switch(sys: &System) -> i32 {
     val -= 1; // Make the index zero based.
     let mut jpos = common::JSwitch::JSwitchNone;
     if let Some(node) = sys.get_node(&jctv[val]) {
-        //node.toggle_switch_pos();
+        node.toggle_switch_pos();
         jpos = node.get_switch_pos();
     }
     println!("{}: junction switch is {}",
         &jctv[val], if jpos == JSwitchLeft { "LEFT" } else { "RIGHT" });
 
-    //sys.update_all_signals();
+    sys.update_all_signals();
     return 0;
 }
 fn cmd_list_segments(sys: &System) -> i32 {
     sys.show_edges();
     return 0;
 }
-fn cmd_show_connections() -> i32 {
-    println!("Here is where we show track connections.");
+fn cmd_show_connections(sys: &System) -> i32 {
+    sys.show_nodes();
     return 0;
 }
 fn cmd_place_train() -> i32 {
@@ -352,7 +352,7 @@ fn run_command(sys: &mut System) -> i32 {
         }
         3 => {
             println!("----------------- Show Connections -----------------");
-            rc = cmd_show_connections();
+            rc = cmd_show_connections(sys);
             println!("----------------------------------------------------");
         }
         4 => {

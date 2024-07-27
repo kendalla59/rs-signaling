@@ -10,22 +10,34 @@ use common::JSwitch::JSwitchRight;
 pub struct Edge
 {
     pub name: String,
-    pub ends: [NodeSlot; common::NUM_ENDS],
+    pub ends: [NodeSlot; NUM_ENDS],
 }
 
 impl Edge {
 
     pub fn get_node(&self, end: End) -> NodeSlot
     {
-        assert!(end == common::END_A || end == common::END_B);
+        assert!(end == END_A || end == END_B);
         NodeSlot {
             ns_node: self.ends[end].ns_node.clone(),
-            ns_slot: self.ends[end].ns_slot
+            ns_slot: self.ends[end].ns_slot,
+        }
+    }
+
+    pub fn get_adjacent(&self, end: End) -> NodeSlot {
+        assert!(end == END_A || end == END_B);
+        if end == END_A {
+            NodeSlot { ns_node: self.ends[END_B].ns_node.clone(),
+                       ns_slot: self.ends[END_B].ns_slot, }
+        }
+        else {
+            NodeSlot { ns_node: self.ends[END_A].ns_node.clone(),
+                       ns_slot: self.ends[END_A].ns_slot, }
         }
     }
 
     pub fn assign_node_slot(&mut self, node: &NodeSlot, node_end: End) {
-        assert!(node_end == common::END_A || node_end == common::END_B);
+        assert!(node_end == END_A || node_end == END_B);
         self.ends[node_end].ns_node = node.ns_node.clone();
         self.ends[node_end].ns_slot = node.ns_slot;
     }
