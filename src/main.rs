@@ -12,6 +12,7 @@ pub mod common;
 use common::END_A;
 use common::END_B;
 use common::NUM_ENDS;
+use common::JSwitch::JSwitchLeft;
 
 pub mod system;
 use system::System;
@@ -128,8 +129,46 @@ fn cmd_place_signal() -> i32 {
     println!("Here is where we place a traffic signal.");
     return 0;
 }
-fn cmd_toggle_switch() -> i32 {
-    println!("Here is where we toggle a track switch.");
+fn cmd_toggle_switch(sys: &System) -> i32 {
+    let jctv = sys.get_all_junctions();
+    if jctv.is_empty() {
+        println!(">>> There are no junctions in the track network <<<");
+        return 0;
+    }
+    let mut jnum = 0;
+    for name in &jctv {
+        jnum += 1;
+        println!("{jnum}: {name}");
+    }
+    let mut numstr = String::new();
+    print!("Enter junction (1..{jnum}): ");
+    io::stdout().flush().unwrap();
+    match io::stdin().read_line(&mut numstr) {
+        Ok(_)   => numstr = numstr.trim_end().to_string(),
+        Err(_)  => numstr.clear(),
+    }
+    if numstr.is_empty() {
+        println!("No entry, quitting function...");
+    }
+    let mut val : usize;
+    match numstr.trim().parse() {
+        Ok(n) => val = n,
+        Err(_) => val = 0,
+    }
+    if (val < 1) || (val > jnum) {
+        println!("No such junction");
+        return 1;
+    }
+    val -= 1; // Make the index zero based.
+    let mut jpos = common::JSwitch::JSwitchNone;
+    if let Some(node) = sys.get_node(&jctv[val]) {
+        //node.toggle_switch_pos();
+        jpos = node.get_switch_pos();
+    }
+    println!("{}: junction switch is {}",
+        &jctv[val], if jpos == JSwitchLeft { "LEFT" } else { "RIGHT" });
+
+    //sys.update_all_signals();
     return 0;
 }
 fn cmd_list_segments(sys: &System) -> i32 {
@@ -235,7 +274,7 @@ fn run_command_build(sys: &mut System) -> i32 {
         }
         4 => {
             println!("-------------- Toggle Junction Switch --------------");
-            rc = cmd_toggle_switch();
+            rc = cmd_toggle_switch(sys);
             println!("----------------------------------------------------");
         }
         5 => {

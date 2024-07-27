@@ -19,6 +19,8 @@ use node::Node;
 pub mod train;
 use train::Train;
 
+type NodeVec = Vec<String>;
+
 use std::collections::HashMap;
 use itertools::Itertools;
 
@@ -84,6 +86,18 @@ impl System {
         self.edge_map.get_mut(&edge_name)
     }
 
+    pub fn get_edge(&self, name: &String) -> Option<&Edge> {
+        self.edge_map.get(name)
+    }
+    pub fn has_edge(&self, name: &String) -> bool {
+        let rval;
+        match self.edge_map.get(name) {
+            None    => rval = false,
+            Some(_) => rval = true,
+        }
+        rval
+    }
+
     // ==============================================================
     // create_node
     // ==============================================================
@@ -112,6 +126,10 @@ impl System {
         self.node_map.get_mut(&node_name)
     }
 
+    pub fn get_node(&self, name: &String) -> Option<&Node> {
+        self.node_map.get(name)
+    }
+
     // ==============================================================
     // create_train
     // ==============================================================
@@ -131,20 +149,6 @@ impl System {
         let train = Train { name: train_name.clone() };
         self.train_map.insert(train_name.clone(), train);
         self.train_map.get(&train_name)
-    }
-
-    // ==============================================================
-
-    pub fn get_edge(&self, name: &String) -> Option<&Edge> {
-        self.edge_map.get(name)
-    }
-    pub fn has_edge(&self, name: &String) -> bool {
-        let rval;
-        match self.edge_map.get(name) {
-            None    => rval = false,
-            Some(_) => rval = true,
-        }
-        rval
     }
 
     // ==============================================================
@@ -263,6 +267,16 @@ impl System {
             }
         }
         return 0;
+    }
+
+    pub fn get_all_junctions(&self) -> NodeVec {
+        let mut rval = vec![];
+        for (name, node) in &self.node_map {
+            if node.get_node_type() == NodeType::Junction {
+                rval.push(name.clone());
+            }
+        }
+        rval
     }
 
     fn get_unique_edge_name(&self) -> String {
