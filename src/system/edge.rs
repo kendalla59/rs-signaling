@@ -24,11 +24,15 @@ impl Edge {
         &mut self.signals[end]
     }
 
-    pub fn place_signal_light(&mut self, end: End) {
+    pub fn place_signal_light(&mut self, end: End) -> i32 {
         assert!(end == END_A || end == END_B);
-        assert!(self.signals[end].edge.ee_edge.is_empty());
-        self.signals[end].edge.ee_edge = self.name.clone();
-        self.signals[end].edge.ee_end = end;
+        if self.signals[end].edge.ee_edge.is_empty() {
+            self.signals[end].edge.ee_edge = self.name.clone();
+            self.signals[end].edge.ee_end = end;
+            return 0;
+        }
+        println!("Signal has already been placed here");
+        return 1;
     }
 
     pub fn get_node(&self, end: End) -> NodeSlot

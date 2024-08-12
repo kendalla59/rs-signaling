@@ -147,20 +147,20 @@ fn cmd_place_signal(sys: &mut System) -> i32 {
     let end1 = enter_a_or_b();
 
     if let Some(eref) = edge {
-        eref.place_signal_light(end1);
-        sys.update_all_signals();
+        let rc = eref.place_signal_light(end1);
+        if rc == 0 {
+            sys.update_all_signals();
 
-        // Get the immutable edge to show the final result.
-        let shed = sys.get_edge(&resp1);
-        if let Some(sref) = shed {
-            sref.show(sys, end1);
+            // Get the immutable edge to show the final result.
+            let shed = sys.get_edge(&resp1);
+            if let Some(sref) = shed {
+                sref.show(sys, end1);
+            }
         }
+        return rc;
     }
-    else {
-        println!("ERROR: cmd_place_signal failed");
-        return 1;
-    }
-    return 0;
+    println!("ERROR: cmd_place_signal failed");
+    return 1;
 }
 fn cmd_toggle_switch(sys: &mut System) -> i32 {
     let jctv = sys.get_all_junctions();
@@ -212,8 +212,91 @@ fn cmd_show_connections(sys: &System) -> i32 {
     sys.show_nodes();
     return 0;
 }
-fn cmd_place_train() -> i32 {
-    println!("Here is where we place a train on a track segment.");
+fn cmd_place_train(sys: &mut System) -> i32 {
+    let topt;
+    let mut resp = String::new();
+    print!("Enter train name (RETURN to create new): ");
+    io::stdout().flush().unwrap();
+    match io::stdin().read_line(&mut resp) {
+        Ok(_)   => resp = resp.trim_end().to_string(),
+        Err(_)  => resp.clear(),
+    }
+    if resp.is_empty() {
+        topt = sys.create_train("");
+        match topt {
+            Some(tref) => {
+                println!("Placing new train \"{}\":", &tref.name);
+            }
+            None => {
+                panic!("Failed to create a new train");
+            }
+        }
+    }
+    else {
+        topt = sys.get_train(&resp);
+        if let None = topt {
+            println!("No such train: \"{}\"", &resp);
+            return 1;
+        }
+    }
+
+/*
+    TrainPtr tptr;
+    std::cout << "Enter train name (RETURN to create new): ";
+    std::string resp;
+    std::getline(std::cin, resp);
+    if (resp.empty()) {
+        tptr = sys().createTrain();
+        std::cout << "Placing new train \""
+                  << tptr->name() << "\":" << std::endl;
+    }
+    else {
+        tptr = sys().getTrain(resp);
+        if (!tptr) {
+            std::cout << "No such train: \"" << resp << "\"" << std::endl;
+            return EINVAL;
+        }
+    }
+    std::cout << "Starting - ";
+    std::string resp1 = enterName();
+    if (resp1.empty()) { return 0; }
+    EdgePtr eptr1 = sys().getEdge(resp1);
+    if (!eptr1) {
+        std::string rnum = nameFromNumber(resp1);
+        eptr1 = sys().getEdge(rnum);
+        if (!eptr1) {
+            std::cout << "No such segment \"" << resp1 << "\"" << std::endl;
+            return EINVAL;
+        }
+    }
+    std::cout << "Ending - ";
+    std::string resp2 = enterName();
+    if (resp2.empty()) { return 0; }
+    EdgePtr eptr2 = sys().getEdge(resp2);
+    if (!eptr2) {
+        std::string rnum = nameFromNumber(resp2);
+        eptr2 = sys().getEdge(rnum);
+        if (!eptr2) {
+            std::cout << "No such segment \"" << resp2 << "\"" << std::endl;
+            return EINVAL;
+        }
+    }
+
+    try {
+        rrsim::EdgeEnd edge = tptr->getPosition();
+        EdgePtr eptr = edge.eeEdge.lock();
+        if (eptr) { eptr->setTrain(nullptr); }
+        tptr->placeOnTrack(eptr1, eptr2);
+        sys().updateAllSignals();
+        tptr->show();
+    }
+    catch (std::exception& ex) {
+        std::cout << "ERROR: " << ex.what() << std::endl;
+        return EFAULT;
+    }
+
+    return 0;
+*/
     return 0;
 }
 fn cmd_step_simulation() -> i32 {
@@ -390,7 +473,7 @@ fn run_command(sys: &mut System) -> i32 {
         }
         4 => {
             println!("--------------- Place Train On Track ---------------");
-            rc = cmd_place_train();
+            rc = cmd_place_train(sys);
             println!("----------------------------------------------------");
         }
         5 => {

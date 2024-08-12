@@ -143,7 +143,7 @@ impl System {
     // ==============================================================
     // create_train
     // ==============================================================
-    pub fn create_train(&mut self, name: &str) -> Option<&Train> {
+    pub fn create_train(&mut self, name: &str) -> Option<&mut Train> {
         // Verify the name is not already used.
         match self.train_map.get(name) {
             Some(_) => return None,
@@ -158,7 +158,11 @@ impl System {
         }
         let train = Train { name: train_name.clone() };
         self.train_map.insert(train_name.clone(), train);
-        self.train_map.get(&train_name)
+        self.train_map.get_mut(&train_name)
+    }
+
+    pub fn get_train(&mut self, name: &str) -> Option<&mut Train> {
+        self.train_map.get_mut(name)
     }
 
     // ==============================================================
