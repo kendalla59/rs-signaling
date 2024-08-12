@@ -31,7 +31,7 @@ impl Edge {
             self.signals[end].edge.ee_end = end;
             return 0;
         }
-        println!("Signal has already been placed here");
+        println!("ERROR: Signal has already been placed here");
         return 1;
     }
 

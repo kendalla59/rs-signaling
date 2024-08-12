@@ -49,8 +49,8 @@ fn name_from_number(num: &String) -> String
 fn enter_a_or_b() -> common::End
 {
     let mut rval = NUM_ENDS;
-    let mut resp = String::new();
     while rval == NUM_ENDS {
+        let mut resp = String::new();
         print!("Enter track end (A or B): ");
         io::stdout().flush().unwrap();
         match io::stdin().read_line(&mut resp) {
