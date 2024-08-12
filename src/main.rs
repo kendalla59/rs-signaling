@@ -225,7 +225,8 @@ fn cmd_place_train(sys: &mut System) -> i32 {
         topt = sys.create_train("");
         match topt {
             Some(tref) => {
-                println!("Placing new train \"{}\":", &tref.name);
+                resp = tref.name.clone();
+                println!("Placing new train \"{}\":", resp);
             }
             None => {
                 panic!("Failed to create a new train");
@@ -233,70 +234,53 @@ fn cmd_place_train(sys: &mut System) -> i32 {
         }
     }
     else {
-        topt = sys.get_train(&resp);
+        topt = sys.get_train_mut(&resp);
         if let None = topt {
             println!("No such train: \"{}\"", &resp);
             return 1;
         }
     }
-
-/*
-    TrainPtr tptr;
-    std::cout << "Enter train name (RETURN to create new): ";
-    std::string resp;
-    std::getline(std::cin, resp);
-    if (resp.empty()) {
-        tptr = sys().createTrain();
-        std::cout << "Placing new train \""
-                  << tptr->name() << "\":" << std::endl;
-    }
-    else {
-        tptr = sys().getTrain(resp);
-        if (!tptr) {
-            std::cout << "No such train: \"" << resp << "\"" << std::endl;
-            return EINVAL;
+    print!("Starting - ");
+    let mut resp1 = enter_name();
+    if resp1.is_empty() { return 0; }
+    let mut eopt1 = sys.get_edge_mut(&resp1);
+    if let None = eopt1 {
+        let rnum = resp1;
+        resp1 = name_from_number(&rnum);
+        eopt1 = sys.get_edge_mut(&resp1);
+        if let None = eopt1 {
+            println!("No such segment \"{}\"", &rnum);
+            return 1;
         }
     }
-    std::cout << "Starting - ";
-    std::string resp1 = enterName();
-    if (resp1.empty()) { return 0; }
-    EdgePtr eptr1 = sys().getEdge(resp1);
-    if (!eptr1) {
-        std::string rnum = nameFromNumber(resp1);
-        eptr1 = sys().getEdge(rnum);
-        if (!eptr1) {
-            std::cout << "No such segment \"" << resp1 << "\"" << std::endl;
-            return EINVAL;
-        }
-    }
-    std::cout << "Ending - ";
-    std::string resp2 = enterName();
-    if (resp2.empty()) { return 0; }
-    EdgePtr eptr2 = sys().getEdge(resp2);
-    if (!eptr2) {
-        std::string rnum = nameFromNumber(resp2);
-        eptr2 = sys().getEdge(rnum);
-        if (!eptr2) {
-            std::cout << "No such segment \"" << resp2 << "\"" << std::endl;
-            return EINVAL;
+    print!("Ending - ");
+    let mut resp2 = enter_name();
+    if resp2.is_empty() { return 0; }
+    let mut eopt2 = sys.get_edge_mut(&resp2);
+    if let None = eopt2 {
+        let rnum = resp2;
+        resp2 = name_from_number(&rnum);
+        eopt2 = sys.get_edge_mut(&resp2);
+        if let None = eopt2 {
+            println!("No such segment \"{}\"", &rnum);
+            return 1;
         }
     }
 
-    try {
-        rrsim::EdgeEnd edge = tptr->getPosition();
-        EdgePtr eptr = edge.eeEdge.lock();
-        if (eptr) { eptr->setTrain(nullptr); }
-        tptr->placeOnTrack(eptr1, eptr2);
-        sys().updateAllSignals();
-        tptr->show();
+    if let Some(tref) = sys.get_train_mut(&resp) {
+        let edge = tref.get_position();
+        let gopt = sys.get_edge(&edge.ee_edge);
+        if let Some(gref) = gopt {
+            gref.set_train("");
+        }
+        let rc = tref.place_on_track(sys, eopt1, eopt2);
+        if rc != 0 {
+            println!("ERROR: place on track failed");
+            return 1;
+        }
+        sys.update_all_signals();
+        tref.show(sys);
     }
-    catch (std::exception& ex) {
-        std::cout << "ERROR: " << ex.what() << std::endl;
-        return EFAULT;
-    }
-
-    return 0;
-*/
     return 0;
 }
 fn cmd_step_simulation() -> i32 {

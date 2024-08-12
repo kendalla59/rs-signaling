@@ -61,6 +61,7 @@ impl System {
                        RRsignal { is_red: false, edge:
                            EdgeEnd { ee_edge: String::new(),
                                      ee_end: NUM_ENDS } } ],
+            train: String::new(),
         };
         match self.edge_map.insert(edge_name.clone(), edge) {
             None => (),
@@ -156,12 +157,19 @@ impl System {
         else {
             train_name = String::from(name);
         }
-        let train = Train { name: train_name.clone() };
+        let train = Train {
+            name: train_name.clone(),
+            edge: EdgeEnd { ee_edge: String::new(), ee_end: NUM_ENDS },
+            destination: String::new(),
+        };
         self.train_map.insert(train_name.clone(), train);
         self.train_map.get_mut(&train_name)
     }
 
-    pub fn get_train(&mut self, name: &str) -> Option<&mut Train> {
+    pub fn get_train(&self, name: &str) -> Option<&Train> {
+        self.train_map.get(name)
+    }
+    pub fn get_train_mut(&mut self, name: &str) -> Option<&mut Train> {
         self.train_map.get_mut(name)
     }
 

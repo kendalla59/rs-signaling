@@ -15,6 +15,7 @@ pub struct Edge
     pub name: String,
     pub ends: [NodeSlot; NUM_ENDS],
     pub signals: [RRsignal; NUM_ENDS],
+    pub train: String,
 }
 
 impl Edge {
@@ -33,6 +34,14 @@ impl Edge {
         }
         println!("ERROR: Signal has already been placed here");
         return 1;
+    }
+
+    pub fn get_train(&self) -> &String {
+        &self.train
+    }
+
+    pub fn set_train(&mut self, train: &str) {
+        self.train = train.to_string();
     }
 
     pub fn get_node(&self, end: End) -> NodeSlot
@@ -181,18 +190,15 @@ impl Edge {
                 }
             }
         }
-        println!("{msg}");
-        /*
-        if (m_train) {
-            if (m_train->getPosition().eeEnd == eEndA) {
-                msg += "  /[o==o]-[o==o]  ";
+        if !self.train.is_empty() {
+            if let Some(tref) = sys.get_train(&self.train) {
+                let tpos = tref.get_position();
+                if tpos.ee_end == END_A { msg += "  /[o==o]-[o==o]  "; }
+                else                    { msg += "   [o==o]-[o==o]\\ "; }
+                msg += tref.name.as_str();
             }
-            else {
-                msg += "   [o==o]-[o==o]\\ ";
-            }
-            msg += m_train->name();
         }
-        std::cout << msg << std::endl;
-        */
+
+        println!("{msg}");
     }
 }
