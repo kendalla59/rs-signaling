@@ -125,8 +125,41 @@ fn cmd_connect_segments(sys: &mut System) -> i32 {
     rc
 }
 
-fn cmd_place_signal() -> i32 {
-    println!("Here is where we place a traffic signal.");
+fn cmd_place_signal(sys: &mut System) -> i32 {
+    let mut resp1 = enter_name();
+    if resp1.is_empty() { return 0; }
+    let mut edge = sys.get_edge_mut(&resp1);
+    match edge {
+        None => {
+            let rnum = resp1;
+            resp1 = name_from_number(&rnum);
+            edge = sys.get_edge_mut(&resp1);
+            match edge {
+                None => {
+                    println!("No such segment \"{rnum}\"");
+                    return 1;
+                }
+                Some(_) => (),
+            }
+        }
+        Some(_) => (),
+    }
+    let end1 = enter_a_or_b();
+
+    if let Some(eref) = edge {
+        eref.place_signal_light(end1);
+        sys.update_all_signals();
+
+        // Get the immutable edge to show the final result.
+        let shed = sys.get_edge(&resp1);
+        if let Some(sref) = shed {
+            sref.show(sys, end1);
+        }
+    }
+    else {
+        println!("ERROR: cmd_place_signal failed");
+        return 1;
+    }
     return 0;
 }
 fn cmd_toggle_switch(sys: &mut System) -> i32 {
@@ -269,7 +302,7 @@ fn run_command_build(sys: &mut System) -> i32 {
         }
         3 => {
             println!("---------------- Place Signal Light ----------------");
-            rc = cmd_place_signal();
+            rc = cmd_place_signal(sys);
             println!("----------------------------------------------------");
         }
         4 => {

@@ -12,6 +12,7 @@ use common::*;
 
 pub mod edge;
 use edge::Edge;
+use edge::rrsignal::RRsignal;
 
 pub mod node;
 use node::Node;
@@ -54,6 +55,12 @@ impl System {
             name: edge_name.clone(),
             ends: [ NodeSlot { ns_node: String::new(), ns_slot: SLOT_1, },
                     NodeSlot { ns_node: String::new(), ns_slot: SLOT_1, } ],
+            signals: [ RRsignal { is_red: false, edge:
+                           EdgeEnd { ee_edge: String::new(),
+                                     ee_end: NUM_ENDS } },
+                       RRsignal { is_red: false, edge:
+                           EdgeEnd { ee_edge: String::new(),
+                                     ee_end: NUM_ENDS } } ],
         };
         match self.edge_map.insert(edge_name.clone(), edge) {
             None => (),
@@ -88,6 +95,9 @@ impl System {
 
     pub fn get_edge(&self, name: &String) -> Option<&Edge> {
         self.edge_map.get(name)
+    }
+    pub fn get_edge_mut(&mut self, name: &String) -> Option<&mut Edge> {
+        self.edge_map.get_mut(name)
     }
     pub fn has_edge(&self, name: &String) -> bool {
         let rval;

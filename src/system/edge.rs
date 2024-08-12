@@ -1,5 +1,8 @@
 // edge.rs
 
+pub mod rrsignal;
+use rrsignal::RRsignal;
+
 use crate::system;
 use super::common;
 use common::*;
@@ -11,9 +14,22 @@ pub struct Edge
 {
     pub name: String,
     pub ends: [NodeSlot; NUM_ENDS],
+    pub signals: [RRsignal; NUM_ENDS],
 }
 
 impl Edge {
+
+    pub fn get_signal(&mut self, end: End) -> &mut RRsignal {
+        assert!(end == END_A || end == END_B);
+        &mut self.signals[end]
+    }
+
+    pub fn place_signal_light(&mut self, end: End) {
+        assert!(end == END_A || end == END_B);
+        assert!(self.signals[end].edge.ee_edge.is_empty());
+        self.signals[end].edge.ee_edge = self.name.clone();
+        self.signals[end].edge.ee_end = end;
+    }
 
     pub fn get_node(&self, end: End) -> NodeSlot
     {
@@ -98,15 +114,21 @@ impl Edge {
                     }
                 }
             }
-            // TODO: Add signals (R/G).
-            msg += "_ ";
+            if self.signals[END_A].edge.ee_edge.is_empty() {
+                msg += "_ ";
+            }
+            else if self.signals[END_A].signal_is_red() { msg += "R "; }
+            else                                        { msg += "G "; }
         }
 
         msg += edge_name;
 
         if (show_end == END_B) || (show_end == NUM_ENDS) {
-            // TODO: Add signals (R/G).
-            msg += " _";
+            if self.signals[END_B].edge.ee_edge.is_empty() {
+                msg += " _";
+            }
+            else if self.signals[END_B].signal_is_red() { msg += " R"; }
+            else                                        { msg += " G"; }
 
             let node = &show_edge.ends[END_B];
             match sys.node_map.get(&node.ns_node) {
