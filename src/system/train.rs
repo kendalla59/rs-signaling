@@ -3,14 +3,14 @@
 use super::common;
 use common::EdgeEnd;
 use common::END_A;
-use common::END_B;
+//use common::END_B;
 use common::NUM_ENDS;
 
 use crate::system;
 use system::System;
 
-use super::edge;
-use edge::Edge;
+//use super::edge;
+//use edge::Edge;
 
 pub struct Train
 {
@@ -24,31 +24,14 @@ impl Train {
         &self.edge
     }
 
-    pub fn place_on_track(&mut self, sys: &mut System, start: Option<&mut Edge>, end: Option<&mut Edge>) -> i32 {
+    pub fn place_on_track(&mut self, sys: &mut System, start: &String, end: &String) -> i32 {
         if let Some(gref) = sys.get_edge_mut(&self.edge.ee_edge) {
             gref.set_train("");
             self.edge.ee_edge = String::new();
             self.edge.ee_end = NUM_ENDS;
             self.destination = String::new();
         }
-        match start {
-            None => { return 0 }            // Not starting anywhere
-            Some(eref1) => {
-                if let Some(_) = sys.get_train(eref1.get_train()) {
-                    println!("ERROR: A train is already on segment: {}", eref1.name);
-                }
-                match end {
-                    None => { return 0; }   // Not ending anywhere
-                    Some(_eref2) => {
-                        eref1.set_train(&self.name);
-                        self.edge.ee_edge = eref1.name.clone();
-                        self.edge.ee_end = END_B; // get_optimal_route determines the final value.
-
-                        self.get_optimal_route(sys);
-                    }
-                }
-            }
-        }
+        println!("Train {} starting at {} and going to {}.", self.name, start, end);
         return 0;
     }
 

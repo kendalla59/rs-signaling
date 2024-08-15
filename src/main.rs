@@ -267,18 +267,24 @@ fn cmd_place_train(sys: &mut System) -> i32 {
         }
     }
 
-    if let Some(tref) = sys.get_train_mut(&resp) {
+    let mut ename = "";
+    if let Some(tref) = sys.get_train(&resp) {
         let edge = tref.get_position();
-        let gopt = sys.get_edge(&edge.ee_edge);
-        if let Some(gref) = gopt {
-            gref.set_train("");
-        }
-        let rc = tref.place_on_track(sys, eopt1, eopt2);
+        ename = edge.ee_edge.as_str();
+    }
+    let gopt = sys.get_edge_mut(&String::from(ename));
+    if let Some(gref) = gopt {
+        gref.set_train("");
+    }
+    if let Some(tref) = sys.get_train_mut(&resp) {
+        let rc = tref.place_on_track(sys, &resp1, &resp2);
         if rc != 0 {
             println!("ERROR: place on track failed");
             return 1;
         }
-        sys.update_all_signals();
+    }
+    sys.update_all_signals();
+    if let Some(tref) = sys.get_train(&resp) {
         tref.show(sys);
     }
     return 0;
