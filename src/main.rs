@@ -256,7 +256,7 @@ fn cmd_place_train(sys: &mut System) -> i32 {
         ename1 = resp;
     }
     if let Some(eref) = eopt {
-        if !eref.train.is_empty() {
+        if !(eref.train.is_empty() || eref.train == tname) {
             println!("ERROR: A train is already on segment: {}", &ename1);
             return 1;
         }
