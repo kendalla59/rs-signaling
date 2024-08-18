@@ -3,8 +3,7 @@
 use super::common;
 use common::EdgeEnd;
 use common::END_A;
-//use common::END_B;
-use common::NUM_ENDS;
+use common::END_B;
 
 use crate::system;
 use system::System;
@@ -24,15 +23,10 @@ impl Train {
         &self.edge
     }
 
-    pub fn place_on_track(&mut self, sys: &mut System, start: &String, end: &String) -> i32 {
-        if let Some(gref) = sys.get_edge_mut(&self.edge.ee_edge) {
-            gref.set_train("");
-            self.edge.ee_edge = String::new();
-            self.edge.ee_end = NUM_ENDS;
-            self.destination = String::new();
-        }
-        println!("Train {} starting at {} and going to {}.", self.name, start, end);
-        return 0;
+    pub fn place_on_track(&mut self, start: &String, end: &String) {
+        self.edge.ee_edge = start.clone();
+        self.edge.ee_end = END_B; // get_optimal_route determines the final value.
+        self.destination = end.clone();
     }
 
     pub fn show(&self, sys: &System) {

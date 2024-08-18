@@ -213,20 +213,19 @@ fn cmd_show_connections(sys: &System) -> i32 {
     return 0;
 }
 fn cmd_place_train(sys: &mut System) -> i32 {
-    let topt;
-    let mut resp = String::new();
+    let mut tname = String::new();
     print!("Enter train name (RETURN to create new): ");
     io::stdout().flush().unwrap();
-    match io::stdin().read_line(&mut resp) {
-        Ok(_)   => resp = resp.trim_end().to_string(),
-        Err(_)  => resp.clear(),
+    match io::stdin().read_line(&mut tname) {
+        Ok(_)   => tname = tname.trim_end().to_string(),
+        Err(_)  => tname.clear(),
     }
-    if resp.is_empty() {
-        topt = sys.create_train("");
+    if tname.is_empty() {
+        let topt = sys.create_train("");
         match topt {
             Some(tref) => {
-                resp = tref.name.clone();
-                println!("Placing new train \"{}\":", resp);
+                tname = tref.name.clone();
+                println!("Placing new train \"{}\":", &tname);
             }
             None => {
                 panic!("Failed to create a new train");
@@ -234,57 +233,67 @@ fn cmd_place_train(sys: &mut System) -> i32 {
         }
     }
     else {
-        topt = sys.get_train_mut(&resp);
+        let topt = sys.get_train(&tname);
         if let None = topt {
-            println!("No such train: \"{}\"", &resp);
+            println!("No such train: \"{}\"", &tname);
             return 1;
         }
     }
+    let ename1;
     print!("Starting - ");
-    let mut resp1 = enter_name();
-    if resp1.is_empty() { return 0; }
-    let mut eopt1 = sys.get_edge_mut(&resp1);
-    if let None = eopt1 {
-        let rnum = resp1;
-        resp1 = name_from_number(&rnum);
-        eopt1 = sys.get_edge_mut(&resp1);
-        if let None = eopt1 {
-            println!("No such segment \"{}\"", &rnum);
+    let resp = enter_name();
+    if resp.is_empty() { return 0; }
+    let mut eopt = sys.get_edge(&resp);
+    if let None = eopt {
+        ename1 = name_from_number(&resp);
+        eopt = sys.get_edge(&ename1);
+        if let None = eopt {
+            println!("No such segment \"{}\"", &resp);
+            return 1;
+        }
+    }
+    else {
+        ename1 = resp;
+    }
+    if let Some(eref) = eopt {
+        if !eref.train.is_empty() {
+            println!("ERROR: A train is already on segment: {}", &ename1);
             return 1;
         }
     }
     print!("Ending - ");
-    let mut resp2 = enter_name();
-    if resp2.is_empty() { return 0; }
-    let mut eopt2 = sys.get_edge_mut(&resp2);
-    if let None = eopt2 {
-        let rnum = resp2;
-        resp2 = name_from_number(&rnum);
-        eopt2 = sys.get_edge_mut(&resp2);
-        if let None = eopt2 {
-            println!("No such segment \"{}\"", &rnum);
+    let ename2;
+    let resp = enter_name();
+    if resp.is_empty() { return 0; }
+    let mut eopt = sys.get_edge(&resp);
+    if let None = eopt {
+        ename2 = name_from_number(&resp);
+        eopt = sys.get_edge(&ename2);
+        if let None = eopt {
+            println!("No such segment \"{}\"", &resp);
             return 1;
         }
+    }
+    else {
+        ename2 = resp;
     }
 
     let mut ename = "";
-    if let Some(tref) = sys.get_train(&resp) {
+    if let Some(tref) = sys.get_train(&tname) {
         let edge = tref.get_position();
         ename = edge.ee_edge.as_str();
     }
-    let gopt = sys.get_edge_mut(&String::from(ename));
-    if let Some(gref) = gopt {
+    if let Some(gref) = sys.get_edge_mut(&String::from(ename)) {
         gref.set_train("");
     }
-    if let Some(tref) = sys.get_train_mut(&resp) {
-        let rc = tref.place_on_track(sys, &resp1, &resp2);
-        if rc != 0 {
-            println!("ERROR: place on track failed");
-            return 1;
-        }
+    if let Some(tref) = sys.get_train_mut(&tname) {
+        tref.place_on_track(&ename1, &ename2);
+    }
+    if let Some(eref) = sys.get_edge_mut(&ename1) {
+        eref.set_train(tname.as_str());
     }
     sys.update_all_signals();
-    if let Some(tref) = sys.get_train(&resp) {
+    if let Some(tref) = sys.get_train(&tname) {
         tref.show(sys);
     }
     return 0;

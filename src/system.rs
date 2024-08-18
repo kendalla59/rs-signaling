@@ -144,26 +144,23 @@ impl System {
     // ==============================================================
     // create_train
     // ==============================================================
-    pub fn create_train(&mut self, name: &str) -> Option<&mut Train> {
+    pub fn create_train(&mut self, name: &str) -> Option<&Train> {
         // Verify the name is not already used.
-        match self.train_map.get(name) {
-            Some(_) => return None,
-            _ => (),
-        }
-        let train_name;
+        if let Some(_) = self.train_map.get(name) { return None; }
+        let tname;
         if name.is_empty() {
-            train_name = self.get_unique_train_name();
+            tname = self.get_unique_train_name();
         }
         else {
-            train_name = String::from(name);
+            tname = String::from(name);
         }
         let train = Train {
-            name: train_name.clone(),
+            name: tname.clone(),
             edge: EdgeEnd { ee_edge: String::new(), ee_end: NUM_ENDS },
             destination: String::new(),
         };
-        self.train_map.insert(train_name.clone(), train);
-        self.train_map.get_mut(&train_name)
+        self.train_map.insert(train.name.clone(), train);
+        self.train_map.get(&tname)
     }
 
     pub fn get_train(&self, name: &str) -> Option<&Train> {
