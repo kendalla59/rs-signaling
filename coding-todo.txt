@@ -1,0 +1,21 @@
+Development Tasks
+-----------------
+
+1. Evaluate the system struct data organization.
+	- Maps of edges, nodes, and trains that reference each other.
+	- Currently they can only reference each other by name,
+	  using references causes compile issues due to lifetime
+	  incompatibilities. There must be a better way...
+2. Errors cannot raise exceptions.
+	- Need a more robust way to handle error status.
+	  Currently, returning error codes to the caller.
+3. Save and restore data base.
+	- Use the Rust I/O libraries.
+4. Find optimal route.
+	- Determine best route from start to end edge.
+5. Run train routes in a thread.
+	- Use Rust multi-threading.
+6. Add signals to each track segment.
+	- Automatically place signal lights.
+
+
